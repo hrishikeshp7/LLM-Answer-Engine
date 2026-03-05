@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  # Prevent secrets from being committed
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for potential secrets
+        run: |
+          echo "Scanning for potential secrets..."
+
+          # Check for common API key patterns
+          PATTERNS=(
+            'BRAVE_API_KEY\s*=\s*["\x27][A-Za-z0-9]'
+            'api_key\s*=\s*["\x27][A-Za-z0-9]{20,}'
+            'X-Subscription-Token:\s*[A-Za-z0-9]{20,}'
+            'sk-[A-Za-z0-9]{20,}'
+            'AIza[A-Za-z0-9_-]{35}'
+          )
+
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rn --include="*.kt" --include="*.java" --include="*.xml" --include="*.properties" \
+               -E "$pattern" app/ native/ scripts/ 2>/dev/null | grep -v "test" | grep -v "example" | grep -v "placeholder"; then
+              echo "WARNING: Potential secret found matching pattern: $pattern"
+              FOUND=1
+            fi
+          done
+
+          if [ $FOUND -eq 1 ]; then
+            echo "::error::Potential secrets detected in source code!"
+            exit 1
+          fi
+
+          echo "No secrets found."
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --no-daemon
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --no-daemon
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run lint
+        run: ./gradlew lintDebug --no-daemon
