@@ -18,13 +18,13 @@ echo ""
 
 # Main LLM model
 LLM_URL="https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-LLM_FILE="$OUTPUT_DIR/qwen3.5-0.8b-q4_k_m.gguf"
+LLM_FILE="$OUTPUT_DIR/qwen2.5-0.5b-instruct-q4_k_m.gguf"
 
 # Embedding model
 EMB_URL="https://huggingface.co/leliuga/all-MiniLM-L6-v2-GGUF/resolve/main/all-MiniLM-L6-v2.Q4_K_M.gguf"
 EMB_FILE="$OUTPUT_DIR/all-minilm-l6-v2-q4_k_m.gguf"
 
-echo "Downloading Qwen 3.5 0.8B (Q4_K_M)..."
+echo "Downloading Qwen 2.5 0.5B Instruct (Q4_K_M)..."
 if [ -f "$LLM_FILE" ]; then
     echo "  Already exists, skipping."
 else

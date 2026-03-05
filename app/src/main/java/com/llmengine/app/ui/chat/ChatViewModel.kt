@@ -50,7 +50,7 @@ class ChatViewModel : ViewModel() {
 
     private fun loadModel() {
         viewModelScope.launch {
-            val modelPath = downloadManager.getModelFilePath("qwen3.5-0.8b")
+            val modelPath = downloadManager.getModelFilePath("qwen2.5-0.5b")
             val loaded = inferenceManager.loadModel(modelPath, settings)
             _isModelLoaded.value = loaded
         }

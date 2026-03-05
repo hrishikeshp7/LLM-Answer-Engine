@@ -30,9 +30,9 @@ class CoreUnitTest {
 
     @Test
     fun `ModelRegistry getModelById returns correct model`() {
-        val model = ModelRegistry.getModelById("qwen3.5-0.8b")
+        val model = ModelRegistry.getModelById("qwen2.5-0.5b")
         assertNotNull(model)
-        assertEquals("Qwen 3.5 0.8B", model?.name)
+        assertEquals("Qwen 2.5 0.5B Instruct", model?.name)
         assertEquals(ModelType.LLM, model?.type)
     }
 

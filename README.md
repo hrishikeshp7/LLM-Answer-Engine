@@ -9,7 +9,7 @@ A modern Android application that runs small language models **completely offlin
 ## Features
 
 ### Core
-- 🤖 **Local LLM Inference** — Run Qwen 3.5 0.8B (or similar) directly on your Android device
+- 🤖 **Local LLM Inference** — Run Qwen 2.5 0.5B Instruct (or similar small models) directly on your Android device
 - 💬 **Chat Interface** — Clean, ChatGPT-like UI with streaming responses
 - 🔍 **Web Search (Optional)** — Brave Search API integration for search-augmented generation
 - 📱 **Fully Offline** — Works without internet once models are downloaded
@@ -179,7 +179,7 @@ LLM Answer Engine is designed with privacy as a core principle:
 
 | Model | Type | Size | Quantization |
 |-------|------|------|-------------|
-| Qwen 3.5 0.8B | LLM | ~397 MB | Q4_K_M |
+| Qwen 2.5 0.5B Instruct | LLM | ~397 MB | Q4_K_M |
 | All-MiniLM-L6-v2 | Embedding | ~23 MB | Q4_K_M |
 
 Additional GGUF-format models can be supported by adding entries to the `ModelRegistry`.

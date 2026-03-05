@@ -10,7 +10,7 @@ Models must be downloaded from within the app or manually placed here for develo
 
 | Model | Type | Size | Format |
 |-------|------|------|--------|
-| Qwen 3.5 0.8B | LLM | ~397 MB | GGUF Q4_K_M |
+| Qwen 2.5 0.5B Instruct | LLM | ~397 MB | GGUF Q4_K_M |
 | All-MiniLM-L6-v2 | Embedding | ~23 MB | GGUF Q4_K_M |
 
 ## Manual Download

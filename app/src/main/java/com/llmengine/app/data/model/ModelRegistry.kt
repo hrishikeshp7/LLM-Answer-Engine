@@ -11,10 +11,10 @@ object ModelRegistry {
      */
     val availableModels = listOf(
         ModelInfo(
-            id = "qwen3.5-0.8b",
-            name = "Qwen 3.5 0.8B",
+            id = "qwen2.5-0.5b",
+            name = "Qwen 2.5 0.5B Instruct",
             description = "Small but capable language model for general chat and reasoning. Quantized to Q4_K_M for efficient on-device inference.",
-            fileName = "qwen3.5-0.8b-q4_k_m.gguf",
+            fileName = "qwen2.5-0.5b-instruct-q4_k_m.gguf",
             downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf",
             sizeBytes = 397_000_000L,
             sha256Checksum = "placeholder_checksum_update_after_verification",
