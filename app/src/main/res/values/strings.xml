@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LLM Answer Engine</string>
+    <string name="chat_hint">Type your message…</string>
+    <string name="send">Send</string>
+    <string name="settings">Settings</string>
+    <string name="model_manager">Model Manager</string>
+    <string name="brave_api_key_label">Brave Search API Key</string>
+    <string name="brave_api_key_hint">Paste your Brave API key here</string>
+    <string name="enable_web_search">Enable Web Search</string>
+    <string name="download">Download</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="setup_title">Welcome to LLM Answer Engine</string>
+    <string name="setup_subtitle">Download models to get started</string>
+    <string name="downloading">Downloading…</string>
+    <string name="download_complete">Download complete</string>
+    <string name="no_models_installed">No models installed. Please download models first.</string>
+    <string name="max_tokens">Max Tokens</string>
+    <string name="temperature">Temperature</string>
+    <string name="cpu_threads">CPU Threads</string>
+    <string name="memory_mode">Memory Usage Mode</string>
+</resources>
