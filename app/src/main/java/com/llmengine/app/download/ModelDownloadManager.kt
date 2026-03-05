@@ -154,10 +154,12 @@ class ModelDownloadManager(private val context: Context) {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun pauseDownload(modelId: String) {
         isPaused = true
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun cancelDownload(modelId: String) {
         isCancelled = true
     }

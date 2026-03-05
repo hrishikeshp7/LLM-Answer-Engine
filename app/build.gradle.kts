@@ -105,6 +105,10 @@ dependencies {
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
+    // Required for R8 when transitive libraries (for example Tink via security-crypto)
+    // reference Error Prone annotations during release minification.
+    implementation("com.google.errorprone:error_prone_annotations:2.28.0")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

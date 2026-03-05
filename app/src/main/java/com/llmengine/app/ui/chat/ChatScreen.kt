@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.llmengine.app.data.model.ChatMessage
 import com.llmengine.app.data.model.SearchSource
-import kotlinx.coroutines.launch
 
 /**
  * Main chat screen with a ChatGPT-like interface.
@@ -44,7 +43,6 @@ fun ChatScreen(
 
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size, currentResponse) {
