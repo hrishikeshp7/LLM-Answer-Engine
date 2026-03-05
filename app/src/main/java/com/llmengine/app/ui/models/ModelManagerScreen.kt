@@ -194,7 +194,7 @@ fun ModelCard(
                 }
                 is DownloadState.Downloading -> {
                     LinearProgressIndicator(
-                        progress = { state.progress },
+                        progress = state.progress,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(4.dp))
