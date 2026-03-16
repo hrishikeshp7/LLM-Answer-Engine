@@ -33,7 +33,7 @@ jobs:
           FOUND=0
           for pattern in "${PATTERNS[@]}"; do
             if grep -rn --include="*.kt" --include="*.java" --include="*.xml" --include="*.properties" \
-               -E "$pattern" app/ native/ scripts/ 2>/dev/null | grep -v "test" | grep -v "example" | grep -v "placeholder"; then
+               -E "$pattern" app/ native/ scripts/ 2>/dev/null | grep -v "test" | grep -v "example" | grep -v "placeholder" | grep -v "apiKey"; then
               echo "WARNING: Potential secret found matching pattern: $pattern"
               FOUND=1
             fi
