@@ -25,7 +25,7 @@ target_link_libraries(llama_jni
 # 1. Clone llama.cpp into native/llama.cpp/
 # 2. Uncomment the following lines:
 #
-# add_subdirectory(${CMAKE_SOURCE_DIR}/../../../../native/llama.cpp llama.cpp)
-# target_include_directories(llama_jni PRIVATE ${CMAKE_SOURCE_DIR}/../../../../native/llama.cpp)
-# target_link_libraries(llama_jni llama ggml)
-# target_compile_definitions(llama_jni PRIVATE LLAMA_AVAILABLE=1)
+add_subdirectory(${CMAKE_SOURCE_DIR}/../../../../native/llama.cpp llama.cpp)
+target_include_directories(llama_jni PRIVATE ${CMAKE_SOURCE_DIR}/../../../../native/llama.cpp/include)
+target_link_libraries(llama_jni llama ggml)
+target_compile_definitions(llama_jni PRIVATE LLAMA_AVAILABLE=1)

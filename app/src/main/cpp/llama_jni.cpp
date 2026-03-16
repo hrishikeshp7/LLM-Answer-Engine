@@ -21,7 +21,7 @@
 
 #ifdef LLAMA_AVAILABLE
 #include "llama.h"
-#include "common.h"
+// Do not include common.h, as it causes linking issues with common lib
 #endif
 
 extern "C" {
@@ -49,7 +49,7 @@ Java_com_llmengine_app_inference_LlamaInference_loadModel(
     llama_backend_init();
 
     auto model_params = llama_model_default_params();
-    llama_model *model = llama_load_model_from_file(path, model_params);
+    llama_model *model = llama_model_load_from_file(path, model_params);
 
     if (!model) {
         LOGE("Failed to load model: %s", path);
@@ -61,10 +61,10 @@ Java_com_llmengine_app_inference_LlamaInference_loadModel(
     ctx_params.n_ctx = contextSize;
     ctx_params.n_threads = threads;
 
-    llama_context *ctx = llama_new_context_with_model(model, ctx_params);
+    llama_context *ctx = llama_init_from_model(model, ctx_params);
     if (!ctx) {
         LOGE("Failed to create context");
-        llama_free_model(model);
+        llama_model_free(model);
         env->ReleaseStringUTFChars(modelPath, path);
         return -1;
     }
