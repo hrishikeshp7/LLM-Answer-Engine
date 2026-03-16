@@ -35,8 +35,12 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Release version: ${VERSION}"
 
+      - name: Generate temporary keystore
+        run: |
+          keytool -genkey -v -keystore temp.keystore -alias temp -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Temporary, O=Temp, C=US"
+
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/temp.keystore -Pandroid.injected.signing.store.password=password -Pandroid.injected.signing.key.alias=temp -Pandroid.injected.signing.key.password=password
 
       - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
