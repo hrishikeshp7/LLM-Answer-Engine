@@ -21,10 +21,7 @@ target_link_libraries(llama_jni
     ${log-lib}
 )
 
-# NOTE: To build with full llama.cpp support:
-# 1. Clone llama.cpp into native/llama.cpp/
-# 2. Uncomment the following lines:
-#
+# Enable full llama.cpp support:
 set(LLAMA_BUILD_COMMON OFF CACHE BOOL "Disable llama.cpp common library" FORCE)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/../../../../native/llama.cpp llama.cpp)

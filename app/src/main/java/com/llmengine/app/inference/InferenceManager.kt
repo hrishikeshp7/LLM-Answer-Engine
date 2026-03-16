@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.awaitClose
 
 /**
  * High-level inference manager that handles model loading and text generation.
@@ -65,7 +67,7 @@ class InferenceManager {
      * Generate a streaming response for the given prompt.
      * Emits tokens one at a time for display.
      */
-    fun generateStream(prompt: String, settings: AppSettings): Flow<String> = flow {
+    fun generateStream(prompt: String, settings: AppSettings): Flow<String> = kotlinx.coroutines.flow.callbackFlow {
         if (!isNativeAvailable) {
             // Stub mode: simulate streaming response
             val stubResponse = "This is a simulated response. " +
@@ -73,24 +75,30 @@ class InferenceManager {
                 "To enable real inference, build the native library with the Android NDK " +
                 "and include a GGUF model file."
             for (word in stubResponse.split(" ")) {
-                emit("$word ")
+                trySend("$word ")
                 kotlinx.coroutines.delay(50)
             }
-            return@flow
+            close()
+            return@callbackFlow
         }
 
-        val fullResponse = llama.generateCompletion(
-            modelHandle,
-            prompt,
-            settings.maxTokens,
-            settings.temperature,
-            object : LlamaInference.TokenCallback {
-                override fun onToken(token: String): Boolean {
-                    return true
+        // Run generation in a background thread
+        launch(Dispatchers.IO) {
+            llama.generateCompletion(
+                modelHandle,
+                prompt,
+                settings.maxTokens,
+                settings.temperature,
+                object : LlamaInference.TokenCallback {
+                    override fun onToken(token: String): Boolean {
+                        trySend(token)
+                        return true
+                    }
                 }
-            }
-        )
-        emit(fullResponse)
+            )
+            close()
+        }
+        awaitClose { }
     }.flowOn(Dispatchers.IO)
 
     suspend fun generateEmbedding(text: String): FloatArray {
