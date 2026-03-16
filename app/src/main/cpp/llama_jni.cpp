@@ -13,6 +13,7 @@
 
 #include <jni.h>
 #include <string>
+#include <vector>
 #include <android/log.h>
 
 #define LOG_TAG "LlamaJNI"
@@ -104,9 +105,72 @@ Java_com_llmengine_app_inference_LlamaInference_generateCompletion(
 
 #ifdef LLAMA_AVAILABLE
     llama_context *ctx = reinterpret_cast<llama_context *>(modelHandle);
-    // Full llama.cpp inference implementation would go here
-    // This is a simplified version - production code would use the sampling API
-    std::string result = "Generated response placeholder";
+    const llama_model *model = llama_get_model(ctx);
+    const llama_vocab *vocab = llama_model_get_vocab(model);
+
+    std::string result = "";
+
+    // Tokenize prompt
+    int n_prompt_tokens = -llama_tokenize(vocab, promptStr, strlen(promptStr), NULL, 0, true, true);
+    if (n_prompt_tokens > 0) {
+        std::vector<llama_token> tokens(n_prompt_tokens);
+        llama_tokenize(vocab, promptStr, strlen(promptStr), tokens.data(), tokens.size(), true, true);
+
+    // Clear previous KV cache to avoid context overflow on multiple inferences
+    llama_memory_t mem = llama_get_memory(ctx);
+    if (mem) {
+        llama_memory_seq_rm(mem, -1, -1, -1);
+    }
+
+        // Evaluate prompt
+        llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
+        if (llama_decode(ctx, batch) == 0) {
+            // Setup sampler
+            llama_sampler_chain_params sparams = llama_sampler_chain_default_params();
+            llama_sampler *smpl = llama_sampler_chain_init(sparams);
+            llama_sampler_chain_add(smpl, llama_sampler_init_temp(temperature));
+            llama_sampler_chain_add(smpl, llama_sampler_init_dist(1234)); // default seed
+
+            jclass callbackClass = nullptr;
+            jmethodID onTokenMethod = nullptr;
+            if (callback != nullptr) {
+                callbackClass = env->GetObjectClass(callback);
+                onTokenMethod = env->GetMethodID(callbackClass, "onToken", "(Ljava/lang/String;)Z");
+            }
+
+            for (int i = 0; i < maxTokens; i++) {
+                llama_token id = llama_sampler_sample(smpl, ctx, -1);
+                llama_sampler_accept(smpl, id);
+
+                if (llama_vocab_is_eog(vocab, id)) {
+                    break;
+                }
+
+                char buf[128];
+                int n = llama_token_to_piece(vocab, id, buf, sizeof(buf), 0, true);
+                if (n < 0) n = -n; // If negative, buffer wasn't big enough, but it wrote what it could.
+
+                std::string token_str(buf, n);
+                result += token_str;
+
+                if (callback != nullptr && onTokenMethod != nullptr) {
+                    jstring jtoken = env->NewStringUTF(token_str.c_str());
+                    jboolean continue_gen = env->CallBooleanMethod(callback, onTokenMethod, jtoken);
+                    env->DeleteLocalRef(jtoken);
+                    if (!continue_gen) {
+                        break;
+                    }
+                }
+
+                batch = llama_batch_get_one(&id, 1);
+                if (llama_decode(ctx, batch) != 0) {
+                    break;
+                }
+            }
+
+            llama_sampler_free(smpl);
+        }
+    }
 
     env->ReleaseStringUTFChars(prompt, promptStr);
     return env->NewStringUTF(result.c_str());
