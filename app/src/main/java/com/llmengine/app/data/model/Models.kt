@@ -59,8 +59,14 @@ data class AppSettings(
     val temperature: Float = 0.7f,
     val cpuThreads: Int = 4,
     val memoryMode: MemoryMode = MemoryMode.BALANCED,
-    val webSearchEnabled: Boolean = false
+    val webSearchEnabled: Boolean = false,
+    val searchProvider: SearchProvider = SearchProvider.BRAVE
 )
+
+enum class SearchProvider(val label: String) {
+    BRAVE("Brave Search"),
+    TAVILY("Tavily Search")
+}
 
 enum class MemoryMode(val label: String) {
     LOW("Low Memory"),

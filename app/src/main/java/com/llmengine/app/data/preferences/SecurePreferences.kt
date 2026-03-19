@@ -6,6 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.llmengine.app.data.model.AppSettings
 import com.llmengine.app.data.model.MemoryMode
+import com.llmengine.app.data.model.SearchProvider
 
 /**
  * Manages secure storage of sensitive data (API keys) and app settings.
@@ -46,6 +47,24 @@ class SecurePreferences(context: Context) {
         return !getBraveApiKey().isNullOrBlank()
     }
 
+    // --- Tavily API Key ---
+
+    fun saveTavilyApiKey(apiKey: String) {
+        securePrefs.edit().putString(KEY_TAVILY_API, apiKey).apply()
+    }
+
+    fun getTavilyApiKey(): String? {
+        return securePrefs.getString(KEY_TAVILY_API, null)
+    }
+
+    fun clearTavilyApiKey() {
+        securePrefs.edit().remove(KEY_TAVILY_API).apply()
+    }
+
+    fun hasTavilyApiKey(): Boolean {
+        return !getTavilyApiKey().isNullOrBlank()
+    }
+
     // --- App Settings ---
 
     fun saveSettings(settings: AppSettings) {
@@ -55,6 +74,7 @@ class SecurePreferences(context: Context) {
             putInt(KEY_CPU_THREADS, settings.cpuThreads)
             putString(KEY_MEMORY_MODE, settings.memoryMode.name)
             putBoolean(KEY_WEB_SEARCH, settings.webSearchEnabled)
+            putString(KEY_SEARCH_PROVIDER, settings.searchProvider.name)
             apply()
         }
     }
@@ -69,7 +89,12 @@ class SecurePreferences(context: Context) {
             } catch (_: Exception) {
                 MemoryMode.BALANCED
             },
-            webSearchEnabled = settingsPrefs.getBoolean(KEY_WEB_SEARCH, false)
+            webSearchEnabled = settingsPrefs.getBoolean(KEY_WEB_SEARCH, false),
+            searchProvider = try {
+                SearchProvider.valueOf(settingsPrefs.getString(KEY_SEARCH_PROVIDER, SearchProvider.BRAVE.name)!!)
+            } catch (_: Exception) {
+                SearchProvider.BRAVE
+            }
         )
     }
 
@@ -92,6 +117,8 @@ class SecurePreferences(context: Context) {
         private const val KEY_CPU_THREADS = "cpu_threads"
         private const val KEY_MEMORY_MODE = "memory_mode"
         private const val KEY_WEB_SEARCH = "web_search_enabled"
+        private const val KEY_TAVILY_API = "tavily_api_key"
+        private const val KEY_SEARCH_PROVIDER = "search_provider"
         private const val KEY_SETUP_COMPLETE = "setup_complete"
     }
 }
