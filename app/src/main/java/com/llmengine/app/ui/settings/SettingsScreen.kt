@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.llmengine.app.data.model.AppSettings
 import com.llmengine.app.data.model.MemoryMode
+import com.llmengine.app.data.model.SearchProvider
 import com.llmengine.app.data.preferences.SecurePreferences
 
 /**
@@ -33,7 +34,9 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
 
     var settings by remember { mutableStateOf(prefs.loadSettings()) }
     var braveApiKey by remember { mutableStateOf(prefs.getBraveApiKey() ?: "") }
+    var tavilyApiKey by remember { mutableStateOf(prefs.getTavilyApiKey() ?: "") }
     var showApiKey by remember { mutableStateOf(false) }
+    var showTavilyApiKey by remember { mutableStateOf(false) }
     var showSavedSnackbar by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -62,6 +65,11 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                         } else {
                             prefs.clearBraveApiKey()
                         }
+                        if (tavilyApiKey.isNotBlank()) {
+                            prefs.saveTavilyApiKey(tavilyApiKey)
+                        } else {
+                            prefs.clearTavilyApiKey()
+                        }
                         showSavedSnackbar = true
                     }) {
                         Text("Save")
@@ -82,23 +90,68 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
             // --- Web Search Section ---
             SettingsSection(title = "Web Search") {
                 Text(
-                    text = "Provide your own Brave Search API key to enable web search augmented generation.",
+                    text = "Provide a search API key to enable web search augmented generation. You can configure Brave Search, Tavily Search, or both.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Search provider selection
+                Text(
+                    text = "Search Provider",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                SearchProvider.entries.forEach { provider ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        RadioButton(
+                            selected = settings.searchProvider == provider,
+                            onClick = { settings = settings.copy(searchProvider = provider) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = provider.label,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = braveApiKey,
                     onValueChange = { braveApiKey = it },
                     label = { Text("Brave Search API Key") },
-                    placeholder = { Text("Paste your API key here") },
+                    placeholder = { Text("Paste your Brave API key here") },
                     visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
                         IconButton(onClick = { showApiKey = !showApiKey }) {
                             Icon(
                                 if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (showApiKey) "Hide" else "Show"
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = tavilyApiKey,
+                    onValueChange = { tavilyApiKey = it },
+                    label = { Text("Tavily Search API Key") },
+                    placeholder = { Text("Paste your Tavily API key here") },
+                    visualTransformation = if (showTavilyApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showTavilyApiKey = !showTavilyApiKey }) {
+                            Icon(
+                                if (showTavilyApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showTavilyApiKey) "Hide" else "Show"
                             )
                         }
                     },
@@ -122,7 +175,7 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                         onCheckedChange = {
                             settings = settings.copy(webSearchEnabled = it)
                         },
-                        enabled = braveApiKey.isNotBlank()
+                        enabled = braveApiKey.isNotBlank() || tavilyApiKey.isNotBlank()
                     )
                 }
 
@@ -142,6 +195,21 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                         Text(
                             text = "1. Visit brave.com/search/api\n" +
                                 "2. Create a free account\n" +
+                                "3. Generate an API key\n" +
+                                "4. Paste it above",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "How to get a Tavily API key:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "1. Visit app.tavily.com\n" +
+                                "2. Create a free account (1,000 free credits/month)\n" +
                                 "3. Generate an API key\n" +
                                 "4. Paste it above",
                             style = MaterialTheme.typography.bodySmall,
@@ -256,7 +324,7 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
                         Text(
                             text = "• All AI inference runs locally on your device\n" +
                                 "• No conversation data is sent to external servers\n" +
-                                "• Web search (if enabled) sends only search queries to Brave\n" +
+                                "• Web search (if enabled) sends only search queries to your chosen provider\n" +
                                 "• Your API key is stored encrypted on device\n" +
                                 "• You can delete all data at any time",
                             style = MaterialTheme.typography.bodySmall,

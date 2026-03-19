@@ -7,7 +7,9 @@ import com.llmengine.app.data.model.AppSettings
 import com.llmengine.app.data.model.ChatMessage
 import com.llmengine.app.data.model.SearchSource
 import com.llmengine.app.data.preferences.SecurePreferences
+import com.llmengine.app.data.model.SearchProvider
 import com.llmengine.app.data.search.BraveSearchClient
+import com.llmengine.app.data.search.TavilySearchClient
 import com.llmengine.app.download.ModelDownloadManager
 import com.llmengine.app.inference.InferenceManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +27,8 @@ class ChatViewModel : ViewModel() {
     private val prefs = SecurePreferences(context)
     private val downloadManager = ModelDownloadManager(context)
     private val inferenceManager = InferenceManager()
-    private val searchClient = BraveSearchClient()
+    private val braveSearchClient = BraveSearchClient()
+    private val tavilySearchClient = TavilySearchClient()
 
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
@@ -72,12 +75,35 @@ class ChatViewModel : ViewModel() {
                 var searchContext: String? = null
                 var sources: List<SearchSource> = emptyList()
 
-                // Perform web search if enabled and API key is available
-                if (settings.webSearchEnabled && prefs.hasBraveApiKey()) {
-                    val apiKey = prefs.getBraveApiKey()!!
-                    val results = searchClient.search(userText, apiKey)
+                // Perform web search if enabled, selecting provider based on settings
+                if (settings.webSearchEnabled) {
+                    val useProvider = when {
+                        settings.searchProvider == SearchProvider.TAVILY && prefs.hasTavilyApiKey() -> SearchProvider.TAVILY
+                        settings.searchProvider == SearchProvider.BRAVE && prefs.hasBraveApiKey() -> SearchProvider.BRAVE
+                        // Fallback: try the other provider if selected one has no key
+                        prefs.hasTavilyApiKey() -> SearchProvider.TAVILY
+                        prefs.hasBraveApiKey() -> SearchProvider.BRAVE
+                        else -> null
+                    }
+
+                    val results = when (useProvider) {
+                        SearchProvider.TAVILY -> {
+                            val apiKey = prefs.getTavilyApiKey()!!
+                            tavilySearchClient.search(userText, apiKey)
+                        }
+                        SearchProvider.BRAVE -> {
+                            val apiKey = prefs.getBraveApiKey()!!
+                            braveSearchClient.search(userText, apiKey)
+                        }
+                        else -> emptyList()
+                    }
+
                     if (results.isNotEmpty()) {
-                        searchContext = searchClient.formatResultsAsContext(results)
+                        searchContext = when (useProvider) {
+                            SearchProvider.TAVILY -> tavilySearchClient.formatResultsAsContext(results)
+                            SearchProvider.BRAVE -> braveSearchClient.formatResultsAsContext(results)
+                            else -> ""
+                        }
                         sources = results.map { result ->
                             SearchSource(
                                 title = result.title,
