@@ -123,7 +123,14 @@ Java_com_llmengine_app_inference_LlamaInference_generateCompletion(
     }
 
         // Evaluate prompt
+        std::vector<llama_pos> pos(tokens.size());
+        for (size_t i = 0; i < tokens.size(); i++) {
+            pos[i] = i;
+        }
+
         llama_batch batch = llama_batch_get_one(tokens.data(), tokens.size());
+        batch.pos = pos.data();
+
         if (llama_decode(ctx, batch) == 0) {
             // Setup sampler
             llama_sampler_chain_params sparams = llama_sampler_chain_default_params();
@@ -148,9 +155,16 @@ Java_com_llmengine_app_inference_LlamaInference_generateCompletion(
 
                 char buf[128];
                 int n = llama_token_to_piece(vocab, id, buf, sizeof(buf), 0, true);
-                if (n < 0) n = -n; // If negative, buffer wasn't big enough, but it wrote what it could.
-
-                std::string token_str(buf, n);
+                std::string token_str;
+                if (n < 0) {
+                    std::vector<char> large_buf(-n);
+                    n = llama_token_to_piece(vocab, id, large_buf.data(), large_buf.size(), 0, true);
+                    if (n > 0) {
+                        token_str = std::string(large_buf.data(), n);
+                    }
+                } else if (n > 0) {
+                    token_str = std::string(buf, n);
+                }
                 result += token_str;
 
                 if (callback != nullptr && onTokenMethod != nullptr) {
@@ -163,6 +177,9 @@ Java_com_llmengine_app_inference_LlamaInference_generateCompletion(
                 }
 
                 batch = llama_batch_get_one(&id, 1);
+                llama_pos id_pos = tokens.size() + i;
+                batch.pos = &id_pos;
+
                 if (llama_decode(ctx, batch) != 0) {
                     break;
                 }
@@ -241,7 +258,11 @@ Java_com_llmengine_app_inference_LlamaInference_unloadModel(
 #ifdef LLAMA_AVAILABLE
     llama_context *ctx = reinterpret_cast<llama_context *>(modelHandle);
     if (ctx) {
+        llama_model *model = const_cast<llama_model*>(llama_get_model(ctx));
         llama_free(ctx);
+        if (model) {
+            llama_model_free(model);
+        }
     }
     llama_backend_free();
 #endif
